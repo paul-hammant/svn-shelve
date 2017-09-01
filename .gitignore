@@ -1,1 +1,6 @@
 .idea/
+__pycache__/
+.cache/
+maven-gpg-plugin-WC/
+shelve/
+*.pyc
