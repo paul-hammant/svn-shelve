@@ -12,20 +12,22 @@ svn_shelve = __import__("svn-shelve")
 
 def test_answer():
 
-
     sh.rm("-rf", "maven-gpg-plugin-WC")
     sh.rm("-rf", "foo.stash")
 
     zipfile.ZipFile("maven-gpg-plugin-WC.zip").extractall("maven-gpg-plugin-WC")
 
-    # Change two files.
-    for line in fileinput.input("maven-gpg-plugin-WC/pom.xml", inplace=True):
-        print "%d: %s" % (fileinput.filelineno(), line),
-    for line in fileinput.input("maven-gpg-plugin-WC/src/main/java/org/apache/maven/plugin/gpg/SigningBundle.java",
-                                inplace=True):
-        print "%d: %s" % (fileinput.filelineno(), line),
+    change_a_file("maven-gpg-plugin-WC/pom.xml")
+    change_a_file("maven-gpg-plugin-WC/src/main/java/org/apache/maven/plugin/gpg/SigningBundle.java")
 
-    svn_shelve.main("shelve", "foo.stash", "maven-gpg-plugin-WC")
+    changed = sh.svn("st", "maven-gpg-plugin-WC")
+    assert changed != ""  # some changes
+
+    sh.python2("svn-shelve.py", "foo.stash", "maven-gpg-plugin-WC", "--revert_too")
+
+    changed = sh.svn("st", "maven-gpg-plugin-WC")
+    assert changed == ""  # no changes
+
 
     tmpdir = str(tempfile.mkdtemp())
 
@@ -53,5 +55,15 @@ def test_answer():
     assert log[0].endswith(" finish")
     assert log[1].endswith(" start")
 
+    # sh.cd(tmpdir + "maven-gpg-plugin-WC")
+
+    # changed = sh.svn("st")
+
     sh.cd(orig_dir)
+
+
+def change_a_file(file):
+    # Change two files.
+    for line in fileinput.input(file, inplace=True):
+        print "%d: %s" % (fileinput.filelineno(), line),
 

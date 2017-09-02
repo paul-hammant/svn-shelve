@@ -3,16 +3,22 @@ import os
 from stat import S_IWUSR, S_IREAD
 import tempfile
 import shutil
+import click
+import sys
 
+
+@click.command()
+@click.argument('stashname', nargs=1)
+@click.argument('working_copy', nargs=1, type=click.Path(exists=True))
+@click.option('--revert_too', is_flag=True, help='Should revert pending changes too')
 
 # TODO - split tests into tests.py (etc).
 # TODO - parameterize, make into utility
 # TODO - cater for adds and deletes (and renames/moves)
 # TODO - named shelves
 # TODO - unshelve too
-import sys
 
-def main(command, stashname, working_copy):
+def main(stashname, working_copy, revert_too):
 
      tmpdir = str(tempfile.mkdtemp())
 
@@ -58,12 +64,16 @@ def main(command, stashname, working_copy):
      sh.git("commit", "-m", "finish")
      sh.git("tag", "-a", "finish", "-m", "finish")
 
-
      sh.git("bundle", "create", orig_dir + "/" + stashname, "master")
 
      sh.cd(orig_dir)
 
      shutil.rmtree(tmpdir)
 
+     if revert_too:
+          for line in splitlines:
+               file_name = line[1:].strip()
+               sh.svn("revert", file_name)
+
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2], sys.argv[2])
+    main()
