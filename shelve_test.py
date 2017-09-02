@@ -20,7 +20,7 @@ def test_answer():
                                 inplace=True):
         print "%d: %s" % (fileinput.filelineno(), line),
 
-    svn_shelve.main([])
+    svn_shelve.main("shelve", "maven-gpg-plugin-WC")
 
     sh.cd("shelve")
     log = sh.git("log", "--pretty=oneline", "--no-color", _tty_out=False).splitlines()

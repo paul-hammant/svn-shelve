@@ -10,12 +10,12 @@ from stat import S_IWUSR, S_IREAD
 # TODO - unshelve too
 import sys
 
-def main(command):
+def main(command, working_copy):
 
      sh.rm("-rf", "shelve")
 
      # While files changed?
-     files = sh.svn("st", "maven-gpg-plugin-WC")
+     files = sh.svn("st", working_copy)
 
      sh.mkdir("shelve")
      sh.git("init", "shelve")
@@ -30,7 +30,7 @@ def main(command):
                     checksum = iLine.split(" ")[1].strip()
                     dir = checksum[0:2]
                     sh.mkdir("-p", "shelve/" + "/".join(file_name.split('/')[:-1]))
-                    sh.cp("maven-gpg-plugin-WC/.svn/pristine/" + dir + "/" + checksum + ".svn-base", "shelve/" + file_name)
+                    sh.cp(working_copy + "/.svn/pristine/" + dir + "/" + checksum + ".svn-base", "shelve/" + file_name)
                     os.chmod("shelve/" + file_name, S_IWUSR | S_IREAD)  # make writable
           f = open("shelve/" + file_name + ".info", 'w')
           f.writelines(info)
@@ -55,4 +55,4 @@ def main(command):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1])
+    main(sys.argv[1], sys.argv[2])
