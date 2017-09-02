@@ -1,6 +1,8 @@
 import sh  # pip2 install sh
 import os
 from stat import S_IWUSR, S_IREAD
+import tempfile
+import shutil
 
 
 # TODO - split tests into tests.py (etc).
@@ -12,13 +14,14 @@ import sys
 
 def main(command, working_copy):
 
-     sh.rm("-rf", "shelve")
+     tmpdir = str(tempfile.mkdtemp())
+
+     print tmpdir
 
      # While files changed?
      files = sh.svn("st", working_copy)
 
-     sh.mkdir("shelve")
-     sh.git("init", "shelve")
+     sh.git("init", tmpdir)
 
      # Copy originals in.
      splitlines = files.splitlines()
@@ -29,30 +32,35 @@ def main(command, working_copy):
                if iLine.startswith("Checksum:"):
                     checksum = iLine.split(" ")[1].strip()
                     dir = checksum[0:2]
-                    sh.mkdir("-p", "shelve/" + "/".join(file_name.split('/')[:-1]))
-                    sh.cp(working_copy + "/.svn/pristine/" + dir + "/" + checksum + ".svn-base", "shelve/" + file_name)
-                    os.chmod("shelve/" + file_name, S_IWUSR | S_IREAD)  # make writable
-          f = open("shelve/" + file_name + ".info", 'w')
+                    sh.mkdir("-p", tmpdir + "/" + "/".join(file_name.split('/')[:-1]))
+                    sh.cp(working_copy + "/.svn/pristine/" + dir + "/" + checksum + ".svn-base", tmpdir + "/" + file_name)
+                    os.chmod(tmpdir + "/" + file_name, S_IWUSR | S_IREAD)  # make writable
+          f = open(tmpdir + "/" + file_name + ".info", 'w')
           f.writelines(info)
           f.close()
 
      # Do a commit
-     sh.cd("shelve")
+     cd = os.getcwd()
+     sh.cd(tmpdir)
      sh.git("add", ".")
      sh.git("commit", "-m", "start")
-     sh.cd("..")
+     sh.cd(cd)
 
      # Copy changed versions in.
      for line in splitlines:
           file_name = line[1:].strip()
-          sh.cp(file_name, "shelve/" + file_name)
+          sh.cp(file_name, tmpdir + "/" + file_name)
 
      # Do a commit
-     sh.cd("shelve")
+     cd = os.getcwd()
+     sh.cd(tmpdir)
      sh.git("add", ".")
      sh.git("commit", "-m", "finish")
-     sh.cd("..")
+     sh.cd(cd)
 
+     # TODO store the shelve somewhere
+
+     shutil.rmtree(tmpdir)
 
 if __name__ == "__main__":
     main(sys.argv[1], sys.argv[2])
