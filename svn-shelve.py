@@ -40,11 +40,11 @@ def main(command, stashname, working_copy):
           f.close()
 
      # Do a commit
-     cd = os.getcwd()
+     orig_dir = os.getcwd()
      sh.cd(tmpdir)
      sh.git("add", ".")
      sh.git("commit", "-m", "start")
-     sh.cd(cd)
+     sh.cd(orig_dir)
 
      # Copy changed versions in.
      for line in splitlines:
@@ -52,14 +52,13 @@ def main(command, stashname, working_copy):
           sh.cp(file_name, tmpdir + "/" + file_name)
 
      # Do a commit
-     cd = os.getcwd()
      sh.cd(tmpdir)
      sh.git("add", ".")
      sh.git("commit", "-m", "finish")
 
-     sh.git("bundle", "create", cd + "/" + stashname, "master")
+     sh.git("bundle", "create", orig_dir + "/" + stashname, "master")
 
-     sh.cd(cd)
+     sh.cd(orig_dir)
 
      shutil.rmtree(tmpdir)
 
