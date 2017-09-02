@@ -44,6 +44,7 @@ def main(command, stashname, working_copy):
      sh.cd(tmpdir)
      sh.git("add", ".")
      sh.git("commit", "-m", "start")
+     sh.git("tag", "-a", "start", "-m", "start")
      sh.cd(orig_dir)
 
      # Copy changed versions in.
@@ -55,6 +56,8 @@ def main(command, stashname, working_copy):
      sh.cd(tmpdir)
      sh.git("add", ".")
      sh.git("commit", "-m", "finish")
+     sh.git("tag", "-a", "finish", "-m", "finish")
+
 
      sh.git("bundle", "create", orig_dir + "/" + stashname, "master")
 
