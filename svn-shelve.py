@@ -12,7 +12,7 @@ import shutil
 # TODO - unshelve too
 import sys
 
-def main(command, working_copy):
+def main(command, stashname, working_copy):
 
      tmpdir = str(tempfile.mkdtemp())
 
@@ -56,11 +56,12 @@ def main(command, working_copy):
      sh.cd(tmpdir)
      sh.git("add", ".")
      sh.git("commit", "-m", "finish")
-     sh.cd(cd)
 
-     # TODO store the shelve somewhere
+     sh.git("bundle", "create", cd + "/" + stashname, "master")
+
+     sh.cd(cd)
 
      shutil.rmtree(tmpdir)
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2])
+    main(sys.argv[1], sys.argv[2], sys.argv[2])
