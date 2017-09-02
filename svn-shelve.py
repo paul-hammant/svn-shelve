@@ -2,7 +2,6 @@ import sh  # pip2 install sh
 import os
 from stat import S_IWUSR, S_IREAD
 
-import fileinput
 
 # TODO - split tests into tests.py (etc).
 # TODO - parameterize, make into utility
@@ -13,7 +12,6 @@ import sys
 
 def main(command):
 
-     print "hello"
      sh.rm("-rf", "shelve")
 
      # While files changed?

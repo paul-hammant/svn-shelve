@@ -1,5 +1,7 @@
 import fileinput
 import zipfile
+
+import ansiconv
 import sh
 
 svn_shelve = __import__("svn-shelve")
@@ -21,11 +23,9 @@ def test_answer():
     svn_shelve.main([])
 
     sh.cd("shelve")
-    log = sh.git("log", "--pretty=oneline", "--no-color").stdout.splitlines()
-
-    print(log)
+    log = sh.git("log", "--pretty=oneline", "--no-color", _tty_out=False).splitlines()
 
     assert len(log) == 2
-    assert log[0].endswith(" (HEAD -> master) finish")
+    assert log[0].endswith(" finish")
     assert log[1].endswith(" start")
 
