@@ -1,7 +1,9 @@
 import fileinput
+import os
+import shutil
+import tempfile
 import zipfile
 
-import ansiconv
 import sh
 
 svn_shelve = __import__("svn-shelve")
@@ -9,7 +11,11 @@ svn_shelve = __import__("svn-shelve")
 
 def test_answer():
 
+    print "good 1"
+
+
     sh.rm("-rf", "maven-gpg-plugin-WC")
+    sh.rm("-rf", "foo.stash")
 
     zipfile.ZipFile("maven-gpg-plugin-WC.zip").extractall("maven-gpg-plugin-WC")
 
@@ -22,10 +28,21 @@ def test_answer():
 
     svn_shelve.main("shelve", "foo.stash", "maven-gpg-plugin-WC")
 
-    sh.cd("shelve")
+    tmpdir = str(tempfile.mkdtemp())
+
+    orig_dir = os.getcwd()
+
+    sh.cd(tmpdir)
+    sh.git("clone", "-b", "master",  orig_dir + "/foo.stash", _tty_out=False)
+
+    sh.cd(tmpdir + "/foo.stash")
     log = sh.git("log", "--pretty=oneline", "--no-color", _tty_out=False).splitlines()
+
+    shutil.rmtree(tmpdir)
 
     assert len(log) == 2
     assert log[0].endswith(" finish")
     assert log[1].endswith(" start")
+
+    sh.cd(orig_dir)
 
