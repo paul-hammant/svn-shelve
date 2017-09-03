@@ -10,7 +10,7 @@ svn_shelve = __import__("svn-shelve")
 svn_unshelve = __import__("svn-unshelve")
 
 
-def test_that_shelve_with_reset_works():
+def test_that_basic_shelve_with_revert_works():
 
     delete_and_recreate_subversion_checkout()
 
@@ -33,6 +33,64 @@ def test_that_shelve_with_reset_works():
                              "'./pom.xml.stash_info', " \
                              "'./src/main/java/org/apache/maven/plugin/gpg/SigningBundle.java', " \
                              "'./src/main/java/org/apache/maven/plugin/gpg/SigningBundle.java.stash_info']"
+
+    start_and_finish_are_the_only_two_git_commits(svn_log)
+
+
+def test_that_shelve_with_add_and_revert_works():
+
+    delete_and_recreate_subversion_checkout()
+
+    change_a_file("maven-gpg-plugin-WC/pom.xml")
+    write_to_file("hello/world.txt", "hello world", "maven-gpg-plugin-WC")
+    sh.svn("add", "maven-gpg-plugin-WC/hello/")
+
+    orig_changed = sh.svn("st", "maven-gpg-plugin-WC").replace("maven-gpg-plugin-WC/", "")
+    assert orig_changed == "A       hello\n" \
+                           "A       hello/world.txt\n" \
+                           "M       pom.xml\n"
+
+    svn_shelve.main(["--revert_too", "foo.stash", "maven-gpg-plugin-WC"])
+
+    changed = sh.svn("st", "maven-gpg-plugin-WC").replace("maven-gpg-plugin-WC/", "")
+    assert changed == "?       hello\n" # has that world.txt file too
+
+    fileList, svn_log = contents_of_stash("/foo.stash")
+
+    assert str(fileList) == "['./hello/world.txt', " \
+                             "'./pom.xml', " \
+                             "'./pom.xml.stash_info']"
+
+    start_and_finish_are_the_only_two_git_commits(svn_log)
+
+def test_that_shelve_with_add_and_without_revert_works():
+
+    delete_and_recreate_subversion_checkout()
+
+    change_a_file("maven-gpg-plugin-WC/pom.xml")
+    write_to_file("hello/world.txt", "hello world", "maven-gpg-plugin-WC")
+    sh.svn("add", "maven-gpg-plugin-WC/hello/")
+
+    orig_changed = sh.svn("st", "maven-gpg-plugin-WC").replace("maven-gpg-plugin-WC/", "")
+    assert orig_changed == "A       hello\n" \
+                           "A       hello/world.txt\n" \
+                           "M       pom.xml\n"
+
+    svn_shelve.main(["foo.stash", "maven-gpg-plugin-WC"])
+
+    changed = sh.svn("st", "maven-gpg-plugin-WC").replace("maven-gpg-plugin-WC/", "")
+    assert changed == orig_changed
+
+    fileList, svn_log = contents_of_stash("/foo.stash")
+
+    assert str(fileList) == "['./hello/world.txt', " \
+                             "'./pom.xml', " \
+                             "'./pom.xml.stash_info']"
+
+    start_and_finish_are_the_only_two_git_commits(svn_log)
+
+
+def start_and_finish_are_the_only_two_git_commits(svn_log):
     assert len(svn_log) == 2
     assert svn_log[0].endswith(" finish")
     assert svn_log[1].endswith(" start")
@@ -61,9 +119,8 @@ def test_that_shelve_without_reset_works():
                              "'./src/main/java/org/apache/maven/plugin/gpg/SigningBundle.java', " \
                              "'./src/main/java/org/apache/maven/plugin/gpg/SigningBundle.java.stash_info']"
 
-    assert len(svn_log) == 2
-    assert svn_log[0].endswith(" finish")
-    assert svn_log[1].endswith(" start")
+    start_and_finish_are_the_only_two_git_commits(svn_log)
+
 
 def test_that_basic_unshelve_works():
 
@@ -127,6 +184,13 @@ def sorted_list_of_files():
                 fileList.append(os.path.join(root, file))
     fileList.sort()
     return fileList
+
+
+def write_to_file(file_name, contents, indir):
+    sh.mkdir("-p", indir + "/" + "/".join(file_name.split('/')[:-1]))
+    f = open(indir + "/" + file_name, 'w')
+    f.writelines(contents)
+    f.close()
 
 
 def change_a_file(file):
