@@ -7,11 +7,7 @@ import sys
 import argparse
 
 
-# TODO - split tests into tests.py (etc).
-# TODO - parameterize, make into utility
 # TODO - cater for adds and deletes (and renames/moves)
-# TODO - named shelves
-# TODO - unshelve too
 
 def main(argv):
 
@@ -68,7 +64,7 @@ def main(argv):
      sh.git("commit", "-m", "finish")
      sh.git("tag", "-a", "finish", "-m", "finish")
 
-     sh.git("bundle", "create", orig_dir + "/" + args.stashname, "master")
+     sh.git("bundle", "create", orig_dir + "/" + args.stashname, "master", "--tags")
 
      sh.cd(orig_dir)
 

@@ -1,6 +1,5 @@
 import fileinput
 import os
-import glob2
 import shutil
 import tempfile
 import zipfile
@@ -8,13 +7,12 @@ import zipfile
 import sh
 
 svn_shelve = __import__("svn-shelve")
+svn_unshelve = __import__("svn-unshelve")
 
 
 def test_that_shelve_with_reset_works():
 
-    delete_temp_files()
-
-    zipfile.ZipFile("maven-gpg-plugin-WC.zip").extractall("maven-gpg-plugin-WC")
+    delete_and_recreate_subversion_checkout()
 
     change_a_file("maven-gpg-plugin-WC/pom.xml")
     change_a_file("maven-gpg-plugin-WC/src/main/java/org/apache/maven/plugin/gpg/SigningBundle.java")
@@ -42,9 +40,7 @@ def test_that_shelve_with_reset_works():
 
 def test_that_shelve_without_reset_works():
 
-    delete_temp_files()
-
-    zipfile.ZipFile("maven-gpg-plugin-WC.zip").extractall("maven-gpg-plugin-WC")
+    delete_and_recreate_subversion_checkout()
 
     change_a_file("maven-gpg-plugin-WC/pom.xml")
     change_a_file("maven-gpg-plugin-WC/src/main/java/org/apache/maven/plugin/gpg/SigningBundle.java")
@@ -68,6 +64,34 @@ def test_that_shelve_without_reset_works():
     assert len(svn_log) == 2
     assert svn_log[0].endswith(" finish")
     assert svn_log[1].endswith(" start")
+
+def test_that_basic_unshelve_works():
+
+    delete_and_recreate_subversion_checkout()
+
+    change_a_file("maven-gpg-plugin-WC/pom.xml")
+    change_a_file("maven-gpg-plugin-WC/src/main/java/org/apache/maven/plugin/gpg/SigningBundle.java")
+    svn_shelve.main(["foo.stash", "maven-gpg-plugin-WC"])
+
+    sh.rm("-rf", "maven-gpg-plugin-WC")
+    create_subversion_checkout()
+
+    orig_changed = sh.svn("st", "maven-gpg-plugin-WC").replace("maven-gpg-plugin-WC/", "")
+    assert orig_changed == ""
+
+    svn_unshelve.main(["foo.stash", "maven-gpg-plugin-WC"])
+
+    changed = sh.svn("st", "maven-gpg-plugin-WC").replace("maven-gpg-plugin-WC/", "")
+    assert changed == "M       pom.xml\n" \
+                      "M       src/main/java/org/apache/maven/plugin/gpg/SigningBundle.java\n"
+
+def delete_and_recreate_subversion_checkout():
+    delete_temp_files()
+    create_subversion_checkout()
+
+
+def create_subversion_checkout():
+    zipfile.ZipFile("maven-gpg-plugin-WC.zip").extractall("maven-gpg-plugin-WC")
 
 
 def delete_temp_files():
