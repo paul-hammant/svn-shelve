@@ -40,12 +40,6 @@ def test_that_shelve_with_reset_works():
     assert svn_log[1].endswith(" start")
 
 
-def delete_temp_files():
-
-    sh.rm("-rf", "maven-gpg-plugin-WC")
-    sh.rm("-rf", "foo.stash")
-
-
 def test_that_shelve_without_reset_works():
 
     delete_temp_files()
@@ -74,6 +68,12 @@ def test_that_shelve_without_reset_works():
     assert len(svn_log) == 2
     assert svn_log[0].endswith(" finish")
     assert svn_log[1].endswith(" start")
+
+
+def delete_temp_files():
+
+    sh.rm("-rf", "maven-gpg-plugin-WC")
+    sh.rm("-rf", "foo.stash")
 
 
 def contents_of_stash(stashfile):
