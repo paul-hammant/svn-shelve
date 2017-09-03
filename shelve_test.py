@@ -20,13 +20,14 @@ def test_that_shelve_with_reset_works():
     change_a_file("maven-gpg-plugin-WC/pom.xml")
     change_a_file("maven-gpg-plugin-WC/src/main/java/org/apache/maven/plugin/gpg/SigningBundle.java")
 
-    changed = sh.svn("st", "maven-gpg-plugin-WC").replace("maven-gpg-plugin-WC/", "")
-    assert changed != ""  # some changes
+    orig_changed = sh.svn("st", "maven-gpg-plugin-WC").replace("maven-gpg-plugin-WC/", "")
+    assert orig_changed == "M       pom.xml\n" \
+                           "M       src/main/java/org/apache/maven/plugin/gpg/SigningBundle.java\n"
 
     svn_shelve.main(["--revert_too", "foo.stash", "maven-gpg-plugin-WC"])
 
     changed = sh.svn("st", "maven-gpg-plugin-WC").replace("maven-gpg-plugin-WC/", "")
-    assert changed == ""  # no changes
+    assert changed == ""  # no pending changes anymore
 
 
     tmpdir = str(tempfile.mkdtemp())
@@ -53,10 +54,6 @@ def test_that_shelve_with_reset_works():
     assert log[0].endswith(" finish")
     assert log[1].endswith(" start")
 
-    # sh.cd(tmpdir + "maven-gpg-plugin-WC")
-
-    # changed = sh.svn("st")
-
 
 def test_that_shelve_without_reset_works():
 
@@ -69,7 +66,8 @@ def test_that_shelve_without_reset_works():
     change_a_file("maven-gpg-plugin-WC/src/main/java/org/apache/maven/plugin/gpg/SigningBundle.java")
 
     orig_changed = sh.svn("st", "maven-gpg-plugin-WC").replace("maven-gpg-plugin-WC/", "")
-    assert orig_changed != ""  # some changes
+    assert orig_changed == "M       pom.xml\n" \
+                           "M       src/main/java/org/apache/maven/plugin/gpg/SigningBundle.java\n"
 
     svn_shelve.main(["foo.stash", "maven-gpg-plugin-WC"])
 
@@ -100,10 +98,6 @@ def test_that_shelve_without_reset_works():
     assert len(log) == 2
     assert log[0].endswith(" finish")
     assert log[1].endswith(" start")
-
-    # sh.cd(tmpdir + "maven-gpg-plugin-WC")
-
-    # changed = sh.svn("st")
 
 
 def sorted_list_of_files():
