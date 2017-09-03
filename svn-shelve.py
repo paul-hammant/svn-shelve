@@ -22,19 +22,14 @@ def main(argv):
      parser.add_argument("--revert_too", help="Revet working copy pending changes too",
                          action="store_true")
 
-     print "XXXXXXX " + str(argv)
      args = parser.parse_args(argv)
-
-     print "1:" + args.stashname
-     print "2:" + args.working_copy
-     print "3:" + str(args.revert_too)
 
      tmpdir = str(tempfile.mkdtemp())
 
      print tmpdir
 
      # While files changed?
-     files = sh.svn("st", args.working_copy)
+     files = sh.svn("st", args.working_copy).replace(args.working_copy + "/", "")
 
      sh.git("init", tmpdir)
 
@@ -42,7 +37,7 @@ def main(argv):
      splitlines = files.splitlines()
      for line in splitlines:
           file_name = line[1:].strip()
-          info = sh.svn("info", file_name)
+          info = sh.svn("info", args.working_copy + "/" + file_name)
           for iLine in info:
                if iLine.startswith("Checksum:"):
                     checksum = iLine.split(" ")[1].strip()
@@ -65,7 +60,7 @@ def main(argv):
      # Copy changed versions in.
      for line in splitlines:
           file_name = line[1:].strip()
-          sh.cp(file_name, tmpdir + "/" + file_name)
+          sh.cp(args.working_copy + "/" + file_name, tmpdir + "/" + file_name)
 
      # Do a commit
      sh.cd(tmpdir)
@@ -82,7 +77,7 @@ def main(argv):
      if args.revert_too:
           for line in splitlines:
                file_name = line[1:].strip()
-               sh.svn("revert", file_name)
+               sh.svn("revert", args.working_copy + "/" + file_name)
 
 if __name__ == "__main__":
     main(sys.argv)

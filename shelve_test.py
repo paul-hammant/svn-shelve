@@ -20,12 +20,12 @@ def test_that_shelve_with_reset_works():
     change_a_file("maven-gpg-plugin-WC/pom.xml")
     change_a_file("maven-gpg-plugin-WC/src/main/java/org/apache/maven/plugin/gpg/SigningBundle.java")
 
-    changed = sh.svn("st", "maven-gpg-plugin-WC")
+    changed = sh.svn("st", "maven-gpg-plugin-WC").replace("maven-gpg-plugin-WC/", "")
     assert changed != ""  # some changes
 
     svn_shelve.main(["--revert_too", "foo.stash", "maven-gpg-plugin-WC"])
 
-    changed = sh.svn("st", "maven-gpg-plugin-WC")
+    changed = sh.svn("st", "maven-gpg-plugin-WC").replace("maven-gpg-plugin-WC/", "")
     assert changed == ""  # no changes
 
 
@@ -39,17 +39,19 @@ def test_that_shelve_with_reset_works():
     sh.cd(tmpdir + "/foo.stash")
     log = sh.git("log", "--pretty=oneline", "--no-color", _tty_out=False).splitlines()
 
-    files = str(glob2.glob("maven-gpg-plugin-WC/**/*"))
+    files = str(glob2.glob("**/*"))
 
     shutil.rmtree(tmpdir)
 
-    assert files == "['maven-gpg-plugin-WC/pom.xml', 'maven-gpg-plugin-WC/pom.xml.info', 'maven-gpg-plugin-WC/src', " \
-                    "'maven-gpg-plugin-WC/src/main', 'maven-gpg-plugin-WC/src/main/java', 'maven-gpg-plugin-WC/src/main/java/org', " \
-                    "'maven-gpg-plugin-WC/src/main/java/org/apache', 'maven-gpg-plugin-WC/src/main/java/org/apache/maven', " \
-                    "'maven-gpg-plugin-WC/src/main/java/org/apache/maven/plugin', " \
-                    "'maven-gpg-plugin-WC/src/main/java/org/apache/maven/plugin/gpg', " \
-                    "'maven-gpg-plugin-WC/src/main/java/org/apache/maven/plugin/gpg/SigningBundle.java', " \
-                    "'maven-gpg-plugin-WC/src/main/java/org/apache/maven/plugin/gpg/SigningBundle.java.info']"
+    sh.cd(orig_dir)
+
+    assert files == "['pom.xml', 'pom.xml.info', 'src', " \
+                    "'src/main', 'src/main/java', 'src/main/java/org', " \
+                    "'src/main/java/org/apache', 'src/main/java/org/apache/maven', " \
+                    "'src/main/java/org/apache/maven/plugin', " \
+                    "'src/main/java/org/apache/maven/plugin/gpg', " \
+                    "'src/main/java/org/apache/maven/plugin/gpg/SigningBundle.java', " \
+                    "'src/main/java/org/apache/maven/plugin/gpg/SigningBundle.java.info']"
 
     assert len(log) == 2
     assert log[0].endswith(" finish")
@@ -59,7 +61,6 @@ def test_that_shelve_with_reset_works():
 
     # changed = sh.svn("st")
 
-    sh.cd(orig_dir)
 
 
 def change_a_file(file):
