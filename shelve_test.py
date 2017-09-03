@@ -90,6 +90,30 @@ def test_that_shelve_with_add_and_without_revert_works():
     start_and_finish_are_the_only_two_git_commits(svn_log)
 
 
+def test_that_shelve_with_delete_and_revert_works():
+
+    delete_and_recreate_subversion_checkout()
+
+    change_a_file("maven-gpg-plugin-WC/pom.xml")
+    sh.svn("rm", "maven-gpg-plugin-WC/src/main/java/org/apache/maven/plugin/gpg/SigningBundle.java")
+
+    orig_changed = sh.svn("st", "maven-gpg-plugin-WC").replace("maven-gpg-plugin-WC/", "")
+    assert orig_changed == "M       pom.xml\n" \
+                           "D       src/main/java/org/apache/maven/plugin/gpg/SigningBundle.java\n"
+
+    svn_shelve.main(["--revert_too", "foo.stash", "maven-gpg-plugin-WC"])
+
+    changed = sh.svn("st", "maven-gpg-plugin-WC").replace("maven-gpg-plugin-WC/", "")
+    assert changed == "" # all reverted
+
+    fileList, svn_log = contents_of_stash("/foo.stash")
+
+    assert str(fileList) == "['./pom.xml', " \
+                             "'./pom.xml.stash_info', " \
+                             "'./src/main/java/org/apache/maven/plugin/gpg/SigningBundle.java.stash_info']"
+
+    start_and_finish_are_the_only_two_git_commits(svn_log)
+
 def start_and_finish_are_the_only_two_git_commits(svn_log):
     assert len(svn_log) == 2
     assert svn_log[0].endswith(" finish")

@@ -11,6 +11,8 @@ import argparse
 
 def main(argv):
 
+     orig_dir = os.getcwd()
+
      parser = argparse.ArgumentParser(description='Svn Shelve')
 
      parser.add_argument("stashname")
@@ -49,7 +51,6 @@ def main(argv):
                write_to_file(file_name, info, tmpdir)
 
      # Do a commit
-     orig_dir = os.getcwd()
      sh.cd(tmpdir)
      sh.git("add", ".")
      sh.git("commit", "-m", "start")
@@ -58,8 +59,16 @@ def main(argv):
 
      # Copy changed versions in.
      for line in splitlines:
+          op = line[0:1]
           file_name = line[1:].strip()
           name = args.working_copy + "/" + file_name
+          if op == "D":
+               try:
+                    sh.cd(tmpdir)
+                    sh.git("rm", file_name)
+               finally:
+                    sh.cd(orig_dir)
+               continue
           if os.path.isfile(name):
                tmpdir_file_name = tmpdir + "/" + file_name
                sh.mkdir("-p", "/".join(tmpdir_file_name.split('/')[:-1]))
