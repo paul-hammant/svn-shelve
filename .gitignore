@@ -4,3 +4,4 @@ __pycache__/
 maven-gpg-plugin-WC/
 shelve/
 *.pyc
+*.stash
