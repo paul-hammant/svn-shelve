@@ -45,7 +45,7 @@ def main(argv):
                     sh.mkdir("-p", tmpdir + "/" + "/".join(file_name.split('/')[:-1]))
                     sh.cp(args.working_copy + "/.svn/pristine/" + dir + "/" + checksum + ".svn-base", tmpdir + "/" + file_name)
                     os.chmod(tmpdir + "/" + file_name, S_IWUSR | S_IREAD)  # make writable
-          f = open(tmpdir + "/" + file_name + ".info", 'w')
+          f = open(tmpdir + "/" + file_name + ".stash_info", 'w')
           f.writelines(info)
           f.close()
 

@@ -39,20 +39,16 @@ def test_that_shelve_with_reset_works():
     sh.cd(tmpdir + "/foo.stash")
     log = sh.git("log", "--pretty=oneline", "--no-color", _tty_out=False).splitlines()
 
-    files = str(glob2.glob("**/*"))
+    fileList = sorted_list_of_files()
 
     shutil.rmtree(tmpdir)
 
     sh.cd(orig_dir)
 
-    assert files == "['pom.xml', 'pom.xml.info', 'src', " \
-                    "'src/main', 'src/main/java', 'src/main/java/org', " \
-                    "'src/main/java/org/apache', 'src/main/java/org/apache/maven', " \
-                    "'src/main/java/org/apache/maven/plugin', " \
-                    "'src/main/java/org/apache/maven/plugin/gpg', " \
-                    "'src/main/java/org/apache/maven/plugin/gpg/SigningBundle.java', " \
-                    "'src/main/java/org/apache/maven/plugin/gpg/SigningBundle.java.info']"
-
+    assert str(fileList) == "['./pom.xml', " \
+                             "'./pom.xml.stash_info', " \
+                             "'./src/main/java/org/apache/maven/plugin/gpg/SigningBundle.java', " \
+                             "'./src/main/java/org/apache/maven/plugin/gpg/SigningBundle.java.stash_info']"
     assert len(log) == 2
     assert log[0].endswith(" finish")
     assert log[1].endswith(" start")
@@ -90,19 +86,16 @@ def test_that_shelve_without_reset_works():
     sh.cd(tmpdir + "/foo.stash")
     log = sh.git("log", "--pretty=oneline", "--no-color", _tty_out=False).splitlines()
 
-    files = str(glob2.glob("**/*"))
+    fileList = sorted_list_of_files()
 
     shutil.rmtree(tmpdir)
 
     sh.cd(orig_dir)
 
-    assert files == "['pom.xml', 'pom.xml.info', 'src', " \
-                    "'src/main', 'src/main/java', 'src/main/java/org', " \
-                    "'src/main/java/org/apache', 'src/main/java/org/apache/maven', " \
-                    "'src/main/java/org/apache/maven/plugin', " \
-                    "'src/main/java/org/apache/maven/plugin/gpg', " \
-                    "'src/main/java/org/apache/maven/plugin/gpg/SigningBundle.java', " \
-                    "'src/main/java/org/apache/maven/plugin/gpg/SigningBundle.java.info']"
+    assert str(fileList) == "['./pom.xml', " \
+                             "'./pom.xml.stash_info', " \
+                             "'./src/main/java/org/apache/maven/plugin/gpg/SigningBundle.java', " \
+                             "'./src/main/java/org/apache/maven/plugin/gpg/SigningBundle.java.stash_info']"
 
     assert len(log) == 2
     assert log[0].endswith(" finish")
@@ -112,6 +105,15 @@ def test_that_shelve_without_reset_works():
 
     # changed = sh.svn("st")
 
+
+def sorted_list_of_files():
+    fileList = []
+    for root, subFolders, files in os.walk("."):
+        for file in files:
+            if not root.startswith("./.git"):
+                fileList.append(os.path.join(root, file))
+    fileList.sort()
+    return fileList
 
 
 def change_a_file(file):
