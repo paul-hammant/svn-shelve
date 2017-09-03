@@ -17,18 +17,19 @@ def main(argv):
 
      orig_dir = os.getcwd()
      tmpdir = str(tempfile.mkdtemp())
-     sh.cd(tmpdir)
-     sh.git("clone", "-b", "master", orig_dir + "/" + args.stashname, _tty_out=False)
-     sh.cd(orig_dir)
+     try:
+          sh.cd(tmpdir)
+          sh.git("clone", "-b", "master", orig_dir + "/" + args.stashname, _tty_out=False)
+          sh.cd(tmpdir + "/" + args.stashname)
+          svn_diff_names = sh.git("diff", "--name-only", "start..finish", _tty_out=False).splitlines()
 
-     sh.cd(tmpdir + "/" + args.stashname)
-     svn_diff_names = sh.git("diff", "--name-only", "start..finish", _tty_out=False).splitlines()
+          for file_name in svn_diff_names:
+               sh.cp(tmpdir + "/" + args.stashname + "/" + file_name,
+                     orig_dir + "/" + args.working_copy + "/" + "/".join(file_name.split('/')[:-1]))
 
-     for file_name in svn_diff_names:
-          sh.cp(tmpdir + "/" + args.stashname + "/" + file_name,
-                orig_dir + "/" + args.working_copy + "/" + "/".join(file_name.split('/')[:-1]))
+     finally:
+          sh.cd(orig_dir)
 
-     sh.cd(orig_dir)
      shutil.rmtree(tmpdir)
 
 
