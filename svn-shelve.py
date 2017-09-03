@@ -3,14 +3,9 @@ import os
 from stat import S_IWUSR, S_IREAD
 import tempfile
 import shutil
-import click
 import sys
+import argparse
 
-
-@click.command()
-@click.argument('stashname', nargs=1)
-@click.argument('working_copy', nargs=1, type=click.Path(exists=True))
-@click.option('--revert_too', is_flag=True, help='Should revert pending changes too')
 
 # TODO - split tests into tests.py (etc).
 # TODO - parameterize, make into utility
@@ -18,14 +13,28 @@ import sys
 # TODO - named shelves
 # TODO - unshelve too
 
-def main(stashname, working_copy, revert_too):
+def main(argv):
+
+     parser = argparse.ArgumentParser(description='Svn Shelve')
+
+     parser.add_argument("stashname")
+     parser.add_argument("working_copy")
+     parser.add_argument("--revert_too", help="Revet working copy pending changes too",
+                         action="store_true")
+
+     print "XXXXXXX " + str(argv)
+     args = parser.parse_args(argv)
+
+     print "1:" + args.stashname
+     print "2:" + args.working_copy
+     print "3:" + str(args.revert_too)
 
      tmpdir = str(tempfile.mkdtemp())
 
      print tmpdir
 
      # While files changed?
-     files = sh.svn("st", working_copy)
+     files = sh.svn("st", args.working_copy)
 
      sh.git("init", tmpdir)
 
@@ -39,7 +48,7 @@ def main(stashname, working_copy, revert_too):
                     checksum = iLine.split(" ")[1].strip()
                     dir = checksum[0:2]
                     sh.mkdir("-p", tmpdir + "/" + "/".join(file_name.split('/')[:-1]))
-                    sh.cp(working_copy + "/.svn/pristine/" + dir + "/" + checksum + ".svn-base", tmpdir + "/" + file_name)
+                    sh.cp(args.working_copy + "/.svn/pristine/" + dir + "/" + checksum + ".svn-base", tmpdir + "/" + file_name)
                     os.chmod(tmpdir + "/" + file_name, S_IWUSR | S_IREAD)  # make writable
           f = open(tmpdir + "/" + file_name + ".info", 'w')
           f.writelines(info)
@@ -64,16 +73,16 @@ def main(stashname, working_copy, revert_too):
      sh.git("commit", "-m", "finish")
      sh.git("tag", "-a", "finish", "-m", "finish")
 
-     sh.git("bundle", "create", orig_dir + "/" + stashname, "master")
+     sh.git("bundle", "create", orig_dir + "/" + args.stashname, "master")
 
      sh.cd(orig_dir)
 
      shutil.rmtree(tmpdir)
 
-     if revert_too:
+     if args.revert_too:
           for line in splitlines:
                file_name = line[1:].strip()
                sh.svn("revert", file_name)
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv)

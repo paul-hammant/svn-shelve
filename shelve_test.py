@@ -10,7 +10,7 @@ import sh
 svn_shelve = __import__("svn-shelve")
 
 
-def test_answer():
+def test_that_shelve_with_reset_works():
 
     sh.rm("-rf", "maven-gpg-plugin-WC")
     sh.rm("-rf", "foo.stash")
@@ -23,7 +23,7 @@ def test_answer():
     changed = sh.svn("st", "maven-gpg-plugin-WC")
     assert changed != ""  # some changes
 
-    sh.python2("svn-shelve.py", "foo.stash", "maven-gpg-plugin-WC", "--revert_too")
+    svn_shelve.main(["--revert_too", "foo.stash", "maven-gpg-plugin-WC"])
 
     changed = sh.svn("st", "maven-gpg-plugin-WC")
     assert changed == ""  # no changes
