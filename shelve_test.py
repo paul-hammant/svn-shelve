@@ -12,8 +12,7 @@ svn_shelve = __import__("svn-shelve")
 
 def test_that_shelve_with_reset_works():
 
-    sh.rm("-rf", "maven-gpg-plugin-WC")
-    sh.rm("-rf", "foo.stash")
+    delete_temp_files()
 
     zipfile.ZipFile("maven-gpg-plugin-WC.zip").extractall("maven-gpg-plugin-WC")
 
@@ -30,35 +29,26 @@ def test_that_shelve_with_reset_works():
     assert changed == ""  # no pending changes anymore
 
 
-    tmpdir = str(tempfile.mkdtemp())
-
-    orig_dir = os.getcwd()
-
-    sh.cd(tmpdir)
-    sh.git("clone", "-b", "master",  orig_dir + "/foo.stash", _tty_out=False)
-
-    sh.cd(tmpdir + "/foo.stash")
-    log = sh.git("log", "--pretty=oneline", "--no-color", _tty_out=False).splitlines()
-
-    fileList = sorted_list_of_files()
-
-    shutil.rmtree(tmpdir)
-
-    sh.cd(orig_dir)
+    fileList, svn_log = contents_of_stash("/foo.stash")
 
     assert str(fileList) == "['./pom.xml', " \
                              "'./pom.xml.stash_info', " \
                              "'./src/main/java/org/apache/maven/plugin/gpg/SigningBundle.java', " \
                              "'./src/main/java/org/apache/maven/plugin/gpg/SigningBundle.java.stash_info']"
-    assert len(log) == 2
-    assert log[0].endswith(" finish")
-    assert log[1].endswith(" start")
+    assert len(svn_log) == 2
+    assert svn_log[0].endswith(" finish")
+    assert svn_log[1].endswith(" start")
+
+
+def delete_temp_files():
+
+    sh.rm("-rf", "maven-gpg-plugin-WC")
+    sh.rm("-rf", "foo.stash")
 
 
 def test_that_shelve_without_reset_works():
 
-    sh.rm("-rf", "maven-gpg-plugin-WC")
-    sh.rm("-rf", "foo.stash")
+    delete_temp_files()
 
     zipfile.ZipFile("maven-gpg-plugin-WC.zip").extractall("maven-gpg-plugin-WC")
 
@@ -74,30 +64,29 @@ def test_that_shelve_without_reset_works():
     changed = sh.svn("st", "maven-gpg-plugin-WC").replace("maven-gpg-plugin-WC/", "")
     assert changed == orig_changed  # changes are still there
 
-    tmpdir = str(tempfile.mkdtemp())
-
-    orig_dir = os.getcwd()
-
-    sh.cd(tmpdir)
-    sh.git("clone", "-b", "master",  orig_dir + "/foo.stash", _tty_out=False)
-
-    sh.cd(tmpdir + "/foo.stash")
-    log = sh.git("log", "--pretty=oneline", "--no-color", _tty_out=False).splitlines()
-
-    fileList = sorted_list_of_files()
-
-    shutil.rmtree(tmpdir)
-
-    sh.cd(orig_dir)
+    fileList, svn_log = contents_of_stash("/foo.stash")
 
     assert str(fileList) == "['./pom.xml', " \
                              "'./pom.xml.stash_info', " \
                              "'./src/main/java/org/apache/maven/plugin/gpg/SigningBundle.java', " \
                              "'./src/main/java/org/apache/maven/plugin/gpg/SigningBundle.java.stash_info']"
 
-    assert len(log) == 2
-    assert log[0].endswith(" finish")
-    assert log[1].endswith(" start")
+    assert len(svn_log) == 2
+    assert svn_log[0].endswith(" finish")
+    assert svn_log[1].endswith(" start")
+
+
+def contents_of_stash(stashfile):
+    tmpdir = str(tempfile.mkdtemp())
+    orig_dir = os.getcwd()
+    sh.cd(tmpdir)
+    sh.git("clone", "-b", "master", orig_dir + stashfile, _tty_out=False)
+    sh.cd(tmpdir + stashfile)
+    svn_log = sh.git("log", "--pretty=oneline", "--no-color", _tty_out=False).splitlines()
+    fileList = sorted_list_of_files()
+    shutil.rmtree(tmpdir)
+    sh.cd(orig_dir)
+    return fileList, svn_log
 
 
 def sorted_list_of_files():
