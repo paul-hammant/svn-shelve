@@ -77,16 +77,22 @@ def test_that_shelve_without_reset_works():
 
 
 def contents_of_stash(stashfile):
-    tmpdir = str(tempfile.mkdtemp())
     orig_dir = os.getcwd()
-    sh.cd(tmpdir)
-    sh.git("clone", "-b", "master", orig_dir + stashfile, _tty_out=False)
+    tmpdir = clone_from_stash_bundle(orig_dir, stashfile)
     sh.cd(tmpdir + stashfile)
     svn_log = sh.git("log", "--pretty=oneline", "--no-color", _tty_out=False).splitlines()
     fileList = sorted_list_of_files()
-    shutil.rmtree(tmpdir)
     sh.cd(orig_dir)
+    shutil.rmtree(tmpdir)
     return fileList, svn_log
+
+
+def clone_from_stash_bundle(orig_dir, stashfile):
+    tmpdir = str(tempfile.mkdtemp())
+    sh.cd(tmpdir)
+    sh.git("clone", "-b", "master", orig_dir + stashfile, _tty_out=False)
+    sh.cd(orig_dir)
+    return tmpdir
 
 
 def sorted_list_of_files():
