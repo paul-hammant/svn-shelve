@@ -51,11 +51,13 @@ def main(argv):
                write_to_file(file_name, info, tmpdir)
 
      # Do a commit
-     sh.cd(tmpdir)
-     sh.git("add", ".")
-     sh.git("commit", "-m", "start")
-     sh.git("tag", "-a", "start", "-m", "start")
-     sh.cd(orig_dir)
+     try:
+          sh.cd(tmpdir)
+          sh.git("add", ".")
+          sh.git("commit", "-m", "start")
+          sh.git("tag", "-a", "start", "-m", "start")
+     finally:
+          sh.cd(orig_dir)
 
      # Copy changed versions in.
      for line in splitlines:
@@ -75,14 +77,15 @@ def main(argv):
                sh.cp(name, tmpdir_file_name)
 
      # Do a commit
-     sh.cd(tmpdir)
-     sh.git("add", ".")
-     sh.git("commit", "-m", "finish")
-     sh.git("tag", "-a", "finish", "-m", "finish")
+     try:
+          sh.cd(tmpdir)
+          sh.git("add", ".")
+          sh.git("commit", "-m", "finish")
+          sh.git("tag", "-a", "finish", "-m", "finish")
 
-     sh.git("bundle", "create", orig_dir + "/" + args.stashname, "master", "--tags")
-
-     sh.cd(orig_dir)
+          sh.git("bundle", "create", orig_dir + "/" + args.stashname, "master", "--tags")
+     finally:
+          sh.cd(orig_dir)
 
      shutil.rmtree(tmpdir)
 
